@@ -1,0 +1,8 @@
+Compile Time Buffer Checks (FORTIFY_SOURCE)
+
+GCC compiler and GLIBC C library from Fedora Core 4 onwards has gained a feature called ¡°FORTIFY_SOURCE¡± that will detect and prevent a subset of the buffer overflows before they can do damage. The idea behind FORTIFY_SOURCE is relatively simple: there are cases where the compiler can know the size of a buffer (if it¡¯s a fixed sized buffer on the stack, as in the example, or if the buffer just came from a malloc() function call). With a known buffer size, functions that operate on the buffer can make sure the buffer will not overflow. FORTIFY_SOURCE in Fedora 8 has been enhanced to cover C++ in addition to C, which prevents many security exploits.
+
+1.expand unbounded calls to ¡±sprintf¡±, ¡±strcpy¡± into their ¡±n¡± length-limited   cousins.
+2.stop format string ¡±%n¡± attacks when the format string is in a writable memory   segment.
+3.require checking various important function return codes and arguments (e.g.   system, write, open).
+4.require explicit file mask when creating new files.
