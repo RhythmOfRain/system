@@ -1,0 +1,9 @@
+当安装VMware tools选项无法使用时，需要手动加载vmware tools安装程序
+
+虚拟机右键—>可移动设备->CD/DVD2->设置->使用ISO映像文件(选择VMware安装目录中的linux.iso)
+
+在打开的CD/DVD中，将VMwareTools-9.6.2-***.tar.gz复制到桌面，然后解压缩
+
+进入解压缩文件夹中，运行sudo ./vmware-install.pl
+
+一路按确定即可
