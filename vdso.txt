@@ -1,0 +1,23 @@
+VDSO:virtual dynamic shared object 
+VDSO就是Virtual Dynamic Shared Object，就是内核提供的虚拟的.so,这个.so文件不在磁盘上，而是在内核里头。内核把包含某.so的内存页在程序启动的时候映射入其内存空间，对应的程序就可以当普通的.so来使用里头的函数。比如syscall()这个函数就是在linux-vdso.so.1里头的，但是磁盘上并没有对应的文件.可以通过ldd/bin/bash看看。
+Linux为了解决和glibc兼容而想出的绝招
+    往往内核添加了一个功能，glibc要花很久才会用上。本来linux那边为这个功能是否进入内核已经吵半天了，glibc这边又要为是否使用这个内核新特性再次吵架半天(glibc不是Linux专有的，还得考虑BSD(虽然人家也不用glibc)，SysV Windows(诶，这没办法)，还有sun那消亡的solaris,还有,自家的Hurd。然后，总之，这样新特性让人的接受上。。。太慢了。
+    说近点的，fnotify glibc还没有对应的包装函数呢，futex和NPTL又是花了许久才进入主流的。libc是app和内核的桥梁，libc理应快速跟上内核的接口变化，但是glibc和内核不是一块开发的，所以，这只是理想罢了。glibc还要去兼容不同版本的内核呢！
+    而内核也要去兼容不同版本的glibc.双方都背负了太多的历史包袱。glibc至今保留Linux Threads兼容2.4版本的古老内核。Linux对已经没用，甚至有bug（接口的问题导致一些bug是必须的）的系统调用也必须保留，谁知道用户会用哪个版本的glibc呢？虽然新的glibc会使用新的调用，但是提供和老的调用一致的API来兼容，但是，用户只升级内核而不升级glibc是常有的事情。就算升级了glibc，你新版本的glibc一定就用上内核的新接口？还是再等几年等glibc的开发者吵架结束吧。
+    于是乎，Linux的大牛们再次使出绝招：让libc变成VDSO进驻内核。
+    这样，随内核发行的VDSO就唯一的和一个特定版本的内核绑定到一起了。注意，VDSO只是随内核发行，没有在内核空间运行，这个不会导致内核膨胀。这样内核和libc都不需要为兼容多个不同版本的对方而写太多的代码，引入太多的bug了。
+    当然，libc不单单有到内核的接口，还有很多常用的函数，这些函数不需要特别的为不同版本的内核小心编写，所以，我估计Linux上会出现两个libc,一个libc在内核，只是系统调用的包裹，另一个libc还是普通的libc，只是这个libc再也不需要花精力去配合如此繁多的kernel了。
+    姑且一个叫kernellibc,一个叫glibc:printf()这些的还在glibc。open(),read(),write(),socket()这些却不再是glibc的了，他们在kernellibc。
+    Linux下传统的系统调用是通过软中断(0x80)实现的，在一个Kernel.org的邮件列表中，有一封邮件讨论了“"Intel P6 vs P7 system call performance”，最后得出的结论是采用传统的int 0x80的系统调用浪费了很多时间，而sysenter/sysexit可以弥补这个缺点，所以才最终决定在linux内核中用后都替换前者（最终在2.6版本的内核中才加入了此功能，即采用sysenter/sysexit）。
+    如何用替换sysenter/sysexit替换以前的int 0x80呢？linux kenerl 需要考虑到这点：有的机器并不支持sysenter/sysexit，于是它跟glibc说好了，“你以后调用系统调用的时候就从我给你的这个地址调用，这个地址指向的内容要么是int 0x80调用方式，要么是sysenter/sysexit调用方式，我会根据机器来选择其中一个”（kernel与glibc的配合是如此的默契），这个地址便是vsyscall的首地址。
+    可以将vdso看成一个shared objdect file（这个文件实际上不存在）,内核将其映射到某个地址空间，被所有程序所共享。
+    
+    VDSO是个很有意思的东西, 它将内核态的调用映射到用户态的地址空间中, 使得调用开销更小, 路径更好.开销更小比较容易理解, 那么路径更好指的是什么呢? 拿x86下的系统调用举例, 传统的int 0x80有点慢, Intel和AMD分别实现了sysenter, sysexit和syscall, sysret, 即所谓的快速系统调用指令, 使用它们更快, 但是也带来了兼容性的问题. 于是Linux实现了vsyscall, 程序统一调用vsyscall, 具体的选择由内核来决定. 而vsyscall的实现就在VDSO中.
+Linux(kernel 2.6 or upper)环境下执行ldd /bin/sh, 会发现有个名字叫linux-vdso.so.1(老点的版本是linux-gate.so.1)的动态文件, 而系统中却找不到它, 它就是VDSO. 例如:
+$ ldd /bin/sh
+        linux-vdso.so.1 =>  (0x00007fff2f9ff000)
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f28d5b36000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007f28d5eca000)
+linux-gate.so.1的地址是0xffffe000. 较新的内核提供了进程随机地址化功能, linux-vdso.so.1的地址每次cat /proc/self/maps都会变化, 想把它从/proc/self/mem中dd出来反汇编玩儿的同学请先:
+echo "0" > /proc/sys/kernel/randomize_va_space
+不光是快速系统调用, glibc现在也提供了VDSO的支持, open(), read(), write(), gettimeofday()都可以直接用VDSO中的实现, 使得这些调用更快, glibc更兼容, 内核新特性在不影响glibc的情况下也可以更快的部署. 实在是Nice!
