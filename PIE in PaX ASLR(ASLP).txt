@@ -1,0 +1,1 @@
+PIE is used in PaX ASLR to move the static code and data regions from their traditionally fixed positions. Since PIE is a compilation option and not a kernel modification, we test it using a vanilla kern el and compile the benchmark suite with the PIE option.
