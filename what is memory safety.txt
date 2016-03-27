@@ -1,0 +1,16 @@
+    The recent Systematization of Knowledge (SoK) paper, the Eternal War in Memory, exemplifies one common way of defining memory safety. It states that a program execution is memory safe so long as a particular list of bad things, called memory access errors, never occur:
+
+    1.buffer overflow
+    2.null pointer dereference
+    3.use after free
+    4.use of uninitialized memory
+    5.illegal free (of an already-freed pointer, or a non-malloced pointer)
+    
+    The wikipedia page on memory safety provides a similar definition. This is a good list, 1 but as a definition it is not very satisfying. Ideally, the fact that these errors are ruled out by memory safety is a consequence of its definition, rather than the substance of it. What is the idea that unifies these errors?
+
+
+memory safety language means program writeen by this language will never occur errors which have talked above
+内存安全语言，就是该语言编写的程序不会出现以上五种错误
+
+a researcher defined memory safety:
+    In a sense, the capability-based definition of memory safety is a form of type safety, where there are only two types: pointer types and non-pointer types.The definition ensures that (1) pointers are only created in a safe way that defines their legal memory region; (2) pointers can only be dereferenced if they point to their allotted memory region; and (3) that region is still defined. And this definition rules out all five error types while allowing for a reasonable set of coding idioms.
