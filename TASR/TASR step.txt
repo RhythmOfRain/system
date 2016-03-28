@@ -1,0 +1,26 @@
+TASR consists of three major components. 
+First, the compile-time component annotates source code written in C with information needed to support its relocation at runtime. This information is added as a new section into the compiled binary (ELF) file of the application which is used in a TASR-enabled system and ignored otherwise. 
+Second, the kernel component of TASR uses this information to manage the re-randomization whenever the appropriate input/output system call pairings occur
+third, an injected process element performs the actual pointer updating each time it is required.
+
+key:
+Therefore, we have also improved pointer tracking for compiler-generated temporary variables so as to achieve
+greater precision.We additionally use techniques from related work [36] to handle other hard cases, such as disambiguation(消除歧义) of unions and other dynamically allocated objects.
+
+limitations. 
+First, it is designed to protect precompiled binary applications rather than interpreted code, and as such, attacks such as JIT-ROP [42] that apply to scripting engines are not in scope. 
+Second, TASR cannot automatically handle code that is not compliant with the C Standard in certain ways. Specifically, upcasting any other pointer type into a function pointer prevents necessary code annotations during the compilation process. 
+Third, use of a custom memory allocator requires the manual addition of the allocator signature into the compilation process in order to properly convey necessary information between compilation stages. Related to this, memory allocations must make use of the sizeof() operator when allocating memory that includes function pointers. 
+Fourth, TASR does not protect against data-only attacks or attacks that use relative addressing, and as such, partial pointer overwrite attacks remain possible without the incorporation of additional fine-grained ASLR techniques.
+
+memory content can leak directly or indirectly [22].
+In the direct form, memory content is sent as an output of the process because of a memory disclosure. vulnerability.
+In the indirect form,timing or fault analysis attacks are used to remotely leak the contents of memory.
+
+We also note that the TASR prototype is designed to protect precompiled application binaries. Applications making use of interpreted code, such as in script execution engines,are capable of leaking memory content to uninstrumented code in the same process address space without traversing a system call boundary. As such, attacks such as JIT-ROP [42] are out of scope for this work.
+动态生成的代码由于没有插装，所以调用系统调用的时候可能不会触发检查。
+TASR只改变了代码的布局
+
+TASR uses a kernel component to invoke rerandomization at these points. Because the kernel handles all external I/O calls, it is in the best position to track I/O events across the entire process, including events in multiple threads.
+Finally, the actual memory rerandomization step has components that reside in both kernelspace and userspace. Although we initially considered both kernel-only and userspace-only approaches to rerandomization, we determined that a hybrid approach offered the best tradeoff between security,performance, and ease of implementation. The kernel selects the new random locations to which the code segments will be moved, carries out the actual movement, and injects a temporary userspace component into the memory space of the
+process being rerandomized. This userspace component is logically separate from the target process, but is considered to be the process for the duration of its existence, and it has full memory access thereby. All rerandomization tasks aside from the code movement are carried out by this userspace component, which the kernel then removes before returning control to the original program control flow.
