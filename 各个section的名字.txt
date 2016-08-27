@@ -1,0 +1,11 @@
+.comment 编译器版本信息
+.debug 调试信息
+.dynamic 动态链接信息
+.hash 符号哈希表
+.line 调试时的行号表，源代码行号与编译后指令的对应表
+.note 额外的比编译器信息
+.strtab String Table，字符串表，存储用到的各种字符串
+.symtab Symbol Table，符号表
+.shstrtab Section String Table，段名表
+
+对于相同权限的节，可以把它们合并到一起当做一个段进行映射，这样可以把原先的多个节当做一个整体进行映射，明显地减少页面内部碎片，节省内存空间。这个称为”Segment”，表示一个或多个属性类似的”Section”，可以认为”Section”是链接时的概念，”Segment”是装载时的概念。链接器会把属性相似的”Section”放在一起，然后系统会按照这些”Section”组成的”Segment”来映射并装载可执行文件。

@@ -1,0 +1,5 @@
+打印前N个成员 
+
+print *(myVector._M_impl._M_start)@N
+
+在gdb中call 函数名()可以调用函数

@@ -1,0 +1,30 @@
+I'll show you how to install PaX/Grsecurity manually( still waiting
+Mempo back online):
+
+** Download kernel( Pick one)£º
+https://www.kernel.org/pub/linux/kernel/v3.x/
+
+** Download PaX/Grsecurity patch( you can download the latest version
+   from )£º
+
+https://grsecurity.net/download.php
+
+** Decompress the kernel and patch the kernel with grsecurity:
+
+xz -d linux-*.tar.xz
+tar xvf linux-*.tar
+cd linux-*/
+patch -p1 < ../grsecurity-*.patch
+
+
+** Do "make menuconfig" to customize your kernel, or you can use my test config:
+
+https://raw.githubusercontent.com/citypw/citypw-SCFE/master/security/apparmor_test/debian-7.4-linux-3.14.1-grsec.config
+
+
+** Compile
+make -j7 deb-pkg
+
+
+** Install the new kernel
+dpkg -i ../*.deb

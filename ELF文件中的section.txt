@@ -1,0 +1,15 @@
+ELF文件里面，每一个 sections 内都装载了性质属性都一样的内容，比方：
+
+1) .text section 里装载了可执行代码；
+
+2) .data section 里面装载了被初始化的数据；
+
+3) .bss section 里面装载了未被初始化的数据；
+
+4) 以 .rec 打头的 sections 里面装载了重定位条目；
+
+5) .symtab 或者 .dynsym section 里面装载了符号信息；
+
+6) .strtab 或者 .dynstr section 里面装载了字符串信息；
+
+7) 其他还有为满足不同目的所设置的section，比方满足调试的目的、满足动态链接与加载的目的等等

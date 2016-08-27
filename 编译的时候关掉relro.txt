@@ -1,0 +1,12 @@
+编译的时候添加选项-Wl,-z,norelro
+
+Partial RELRO
+compiler command line: gcc -Wl,-z,relro
+the ELF sections are reordered so that the ELF internal data sections (.got, .dtors, etc.) precede the program's data sections (.data and .bss)
+non-PLT GOT is read-only
+GOT is still writeable
+
+Full RELRO
+compiler command line: gcc -Wl,-z,relro,-z,now
+supports all the features of partial RELRO
+bonus: the entire GOT is also (re)mapped as read-only
